@@ -8,10 +8,8 @@ from config import connection_string
 
 sync_engine = create_engine(url=connection_string, echo=True)
 
-
 class Base(DeclarativeBase):
     pass
-
 
 class ClientsOrm(Base):
     __tablename__ = "clients"
@@ -31,11 +29,8 @@ class EmployeeOrm(Base):
     middlename: Mapped[str]
     jobtitle: Mapped[str]
     address: Mapped[str]
-    homephone: Mapped[int]
-    dateofbirth: Mapped[datetime]
-    adress: Mapped[str] = mapped_column(String(50))
-    phone: Mapped[str]
-
+    homephone: Mapped[str]
+    dateofbirth: Mapped[datetime] = mapped_column(String(10))
 
 class GoodsOrm(Base):
     __tablename__ = "goods"
@@ -47,7 +42,7 @@ class GoodsOrm(Base):
     description: Mapped[str]
     image: Mapped[str] = mapped_column(String(100))
     purchasecost: Mapped[int]
-    availability: Mapped[datetime]
+    availability: Mapped[str]
     quantity: Mapped[int]
     sellingprice: Mapped[float]
 
