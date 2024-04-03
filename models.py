@@ -70,7 +70,7 @@ class SupplierOrm(Base):
 class SupplyOrm(Base):
     __tablename__ = "supply"
     supplyid: Mapped[int] = mapped_column(primary_key=True)
-    supplierid: Mapped[str] = mapped_column(ForeignKey("supplier.supplierid"))
+    supplierid: Mapped[int] = mapped_column(ForeignKey("supplier.supplierid"))
     supplydate: Mapped[datetime]
 
 

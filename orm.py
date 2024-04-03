@@ -1,5 +1,5 @@
-from sqlalchemy import select
-from models import sync_engine, Base, ClientsOrm, EmployeeOrm, OrdersOrm, GoodsOrm, SupplierOrm
+from sqlalchemy import select, func
+from models import sync_engine, Base, ClientsOrm, EmployeeOrm, OrdersOrm, GoodsOrm, SupplierOrm, SupplyOrm
 from database import session_factory
 
 
@@ -92,29 +92,6 @@ class SyncORM:
             session.commit()
 
     @staticmethod
-    def insert_supplier():
-        with session_factory() as session:
-            supplier_data = [
-                {"suppliername": "Emerald City Imports", "supplierrepresentative": "Emily Johnson",
-                 "contactphonenumber": "294-430-2508", "address": "3 Vidon Hill"},
-                {"suppliername": "Silver Star Trading Co.", "supplierrepresentative": "Jessica Lee",
-                 "contactphonenumber": "920-682-1986", "address": "582 Hansons Hill"},
-                {"suppliername": "Emerald City Imports", "supplierrepresentative": "Kevin Brown",
-                 "contactphonenumber": "151-209-2956", "address": "1 Dixon Center"},
-                {"suppliername": "ABC Suppliers", "supplierrepresentative": "Laura Garcia",
-                 "contactphonenumber": "127-155-6409", "address": "732 Lakeland Drive"},
-                {"suppliername": "ABC Suppliers", "supplierrepresentative": "Jessica Lee",
-                 "contactphonenumber": "824-304-8524", "address": "77 Graedel Park"}
-            ]
-
-            supplier_objects = [SupplierOrm(**supplier) for supplier in supplier_data]
-            session.add_all(supplier_objects)
-            # flush отправляет запрос в базу данных
-            # После flush каждый из работников получает первичный ключ id, который отдала БД
-            session.flush()
-            session.commit()
-
-    @staticmethod
     def insert_orders():
         with session_factory() as session:
             orders_data = [
@@ -136,6 +113,83 @@ class SyncORM:
             # После flush каждый из работников получает первичный ключ id, который отдала БД
             session.flush()
             session.commit()
+
+    @staticmethod
+    def insert_supplier():
+        with session_factory() as session:
+            supplier_data = [
+                {"suppliername": "Emerald City Imports", "supplierrepresentative": "Emily Johnson",
+                 "contactphonenumber": "294-430-2508", "address": "3 Vidon Hill"},
+                {"suppliername": "Silver Star Trading Co.", "supplierrepresentative": "Jessica Lee",
+                 "contactphonenumber": "920-682-1986", "address": "582 Hansons Hill"},
+                {"suppliername": "Emerald City Imports", "supplierrepresentative": "Kevin Brown",
+                 "contactphonenumber": "151-209-2956", "address": "1 Dixon Center"},
+                {"suppliername": "ABC Suppliers", "supplierrepresentative": "Laura Garcia",
+                 "contactphonenumber": "127-155-6409", "address": "732 Lakeland Drive"},
+                {"suppliername": "ABC Suppliers", "supplierrepresentative": "Jessica Lee",
+                 "contactphonenumber": "824-304-8524", "address": "77 Graedel Park"}
+            ]
+
+            supplier_objects = [SupplierOrm(**supplier) for supplier in supplier_data]
+            session.add_all(supplier_objects)
+            # flush отправляет запрос в базу данных
+            # После flush каждый из работников получает первичный ключ id, который отдала БД
+            session.flush()
+            session.commit()
+    @staticmethod
+    def insert_supply():
+        with session_factory() as session:
+            supply_data = [
+                {"supplierid": 3, "supplydate": "2023-06-20"},
+                {"supplierid": 5, "supplydate": "2023-06-13"},
+                {"supplierid": 4, "supplydate": "2023-06-02"},
+                {"supplierid": 2, "supplydate": "2023-10-12"},
+                {"supplierid": 1, "supplydate": "2024-02-24"}
+            ]
+            supply_object = [SupplyOrm(**sypply) for sypply in supply_data]
+            session.add_all(supply_object)
+            session.flush()
+            session.commit()
+
+    @staticmethod
+    def inner_join_query():
+        with session_factory() as session:
+            # Выполняем inner join между таблицами orders, clients и products
+            result = (
+                session.query(OrdersOrm, ClientsOrm)
+                .join(ClientsOrm, OrdersOrm.clientid == ClientsOrm.id)
+                .all()
+            )
+
+            # Выводим результат на экран
+            for order, client in result:
+                print(f"Order ID: {order.order_id}, Client: {client.fullname}")
+
+    @staticmethod
+    def complex_query():
+        with session_factory() as session:
+            # Выполняем inner join между таблицами orders и clients
+            query = (
+                session.query(
+                    OrdersOrm.clientid,
+                    ClientsOrm.fullname,
+                    func.sum(GoodsOrm.quantity).label("total_quantity")
+                )
+                .join(ClientsOrm, OrdersOrm.clientid == ClientsOrm.id)
+                .join(GoodsOrm, OrdersOrm.productid == GoodsOrm.id)
+                .filter(OrdersOrm.placementdate >= '2023-01-01')  # Пример WHERE условия
+                .group_by(OrdersOrm.clientid, ClientsOrm.fullname)  # Пример GROUP BY
+                .order_by(func.sum(GoodsOrm.quantity).desc())  # Пример ORDER BY
+                .distinct()  # Пример DISTINCT
+            )
+
+            # Получаем итерируемый результат
+            results = query.all()
+
+            # Выводим результат на экран
+            for result in results:
+                print(f"Client: {result.fullname}, Client ID:{result.clientid},Total Quantity: {result.total_quantity}")
+
 
     @staticmethod
     def select_clients():
