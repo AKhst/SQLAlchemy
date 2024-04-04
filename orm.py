@@ -210,6 +210,26 @@ class SyncORM:
             session.commit()
 
     @staticmethod
+    def delete_by_id():
+        with session_factory() as session:
+            try:
+                # Удаляем несколько строк из таблицы Поставщик
+                session.query(SupplierOrm).filter(SupplierOrm.supplierid == 2).delete()
+
+                # Фиксируем изменения
+                session.commit()
+
+                # Выводим оставшиеся строки таблицы Поставщик
+                remaining_rows = session.query(SupplierOrm).all()
+                for row in remaining_rows:
+                    print(row)
+
+            except Exception as e:
+                # Если произошла ошибка, откатываем транзакцию
+                session.rollback()
+                print("Произошла ошибка:", e)
+
+    @staticmethod
     def print_clients():
         with session_factory() as session:
             clients = session.query(ClientsOrm).all()

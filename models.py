@@ -1,9 +1,7 @@
 # declarative base class
 from datetime import datetime
 from sqlalchemy import String, ForeignKey, create_engine
-from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy.orm import Mapped
-from sqlalchemy.orm import mapped_column
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from config import connection_string
 
 sync_engine = create_engine(url=connection_string, echo=True)
@@ -65,14 +63,15 @@ class SupplierOrm(Base):
     supplierrepresentative: Mapped[str]
     contactphonenumber: Mapped[str]
     address: Mapped[str]
-
+    # Отношение "один ко многим" между Supplier и Supply
+    # supplies = relationship('SupplyOrm', back_populates="supplier", cascade="all, delete-orphan")
 
 class SupplyOrm(Base):
     __tablename__ = "supply"
     supplyid: Mapped[int] = mapped_column(primary_key=True)
-    supplierid: Mapped[int] = mapped_column(ForeignKey("supplier.supplierid"))
+    supplierid: Mapped[int] = mapped_column(ForeignKey("supplier.supplierid", ondelete="CASCADE"))
     supplydate: Mapped[datetime]
-
+    # supplier = relationship("SupplierOrm", back_populates="supplies", foreign_keys=[supplierid])
 
 # После определения всех моделей вызовите create_all
 Base.metadata.create_all(sync_engine)
